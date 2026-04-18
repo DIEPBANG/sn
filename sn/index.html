@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bức Thư Album ❤️</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:italic,wght@700&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #fce4ec;
+            --pink-accent: #ff85a1;
+            --dark-pink: #f06292;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: var(--bg-color);
+            font-family: 'Quicksand', sans-serif;
+            perspective: 2000px;
+            overflow: hidden;
+        }
+
+        .book-wrapper {
+            position: relative;
+            width: 400px;
+            height: 500px;
+            transition: transform 1.5s ease;
+            transform-style: preserve-3d;
+        }
+
+        .book-wrapper.open {
+            transform: translateX(200px);
+        }
+
+        .book {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            border-radius: 5px;
+            transform-origin: left;
+            transition: transform 1.5s cubic-bezier(0.645, 0.045, 0.355, 1);
+            transform-style: preserve-3d;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* TRANG PHẢI */
+        .page-right {
+            background: #fff;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+        }
+
+        /* KHUNG CHỨA ẢNH: Thu nhỏ lại để tạo khoảng trống */
+        .photo {
+            width: 80%;            /* Đã giảm chiều rộng khung xuống 80% */
+            height: auto;
+            max-height: 65%;       /* Giới hạn chiều cao để không lấn át cái nút */
+            overflow: hidden;
+            border: 6px solid #fff; /* Viền trắng mảnh hơn cho tinh tế */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fff; /* Nền trắng để nếu ảnh không khít thì vẫn đẹp */
+            margin-bottom: 20px;
+        }
+
+        /* ẢNH BÊN TRONG: Đảm bảo hiện đầy đủ */
+        .photo img { 
+            width: 100%; 
+            height: 100%; 
+            /* object-fit: contain là quan trọng nhất: 
+               Nó sẽ co ảnh lại cho vừa khít cái khung mà không bị cắt */
+            object-fit: contain; 
+            display: block;
+        }
+
+        /* NÚT CHUYỂN TIẾP */
+        .next-button {
+            padding: 10px 25px;
+            background-color: var(--pink-accent);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: none; /* Mặc định ẩn, khi mở sách mới hiện */
+            box-shadow: 0 4px 15px rgba(255, 133, 161, 0.4);
+            font-size: 0.95rem;
+        }
+
+        .next-button:hover {
+            background-color: var(--dark-pink);
+            transform: scale(1.05);
+        }
+
+        /* Hiện nút khi sách mở */
+        .book-wrapper.open .next-button {
+            display: inline-block;
+            animation: fadeIn 2s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* PHẦN CÒN LẠI GIỮ NGUYÊN */
+        .flip-page { z-index: 2; }
+        .front {
+            position: absolute; width: 100%; height: 100%;
+            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; backface-visibility: hidden; z-index: 2;
+        }
+        .back {
+            position: absolute; width: 100%; height: 100%; background: #fff; padding: 40px;
+            display: flex; flex-direction: column; justify-content: center;
+            transform: rotateY(-180deg); backface-visibility: hidden; z-index: 1;
+            border-left: 1px solid #f0f0f0;
+        }
+        .back h2 { font-family: 'Dancing Script', cursive; font-size: 2rem; color: var(--pink-accent); margin-bottom: 20px; text-align: center; }
+        .back p { font-size: 1.05rem; line-height: 1.6; font-style: italic; color: #555; text-align: center; }
+        .book-wrapper.open .flip-page { transform: rotateY(-180deg); }
+
+        .instruction {
+            position: fixed; bottom: 30px; background: #fff; padding: 10px 20px;
+            border-radius: 20px; font-weight: bold; color: var(--pink-accent);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.05);
+        }
+
+        .petal {
+            position: absolute; background: #ffc0cb; border-radius: 150% 0 150% 0;
+            animation: fall linear infinite; pointer-events: none;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0); }
+            100% { transform: translateY(110vh) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="book-wrapper" id="wrapper">
+        <div class="book" onclick="openBook()">
+            
+            <div class="page page-right">
+                <div class="photo">
+                    <img src="nguyen.png" alt="Ảnh chúc mừng sinh nhật">
+                </div>
+                
+                <a href="home.html" class="next-button">
+                    Tiếp tục xem ✨
+                </a>
+            </div>
+
+            <div class="page flip-page">
+                <div class="front">
+                    <i class="fas fa-heart" style="font-size: 3.5rem; margin-bottom: 10px;"></i>
+                    <h1>Dear You</h1>
+                    <p>Click to open ✨</p>
+                </div>
+                <div class="back">
+                    <h2>" Chúc mừng sinh nhật Nguyên 🎉"</h2>
+                    <p>Chúc em một tuổi mới thật nhiều niềm vui, sức khỏe dồi dào, lúc nào cũng cười thật tươi.</p>
+                    <br>
+                    <p>Mong rằng mọi ước mơ của bạn sẽ sớm thành hiện thực và luôn có những người yêu thương bên cạnh</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="instruction">Nhấn vào quyển sách để mở nhé!</div>
+
+    <script>
+        function openBook() {
+            const wrapper = document.getElementById('wrapper');
+            wrapper.classList.toggle('open');
+            // Đã bỏ hàm tự động chuyển trang cũ để người dùng tự nhấn nút
+        }
+
+        for (let i = 0; i < 20; i++) {
+            const p = document.createElement('div');
+            p.className = 'petal';
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.width = p.style.height = Math.random() * 15 + 10 + 'px';
+            p.style.animationDuration = Math.random() * 3 + 5 + 's';
+            p.style.top = "-5vh";
+            document.body.appendChild(p);
+        }
+    </script>
+</body>
+</html>
